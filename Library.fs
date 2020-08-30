@@ -50,14 +50,17 @@ module public CommandLineParser =
             arg |> FindName |> ValidPara parameters |> result
       coolLoop args 0 "" Map.empty
 
-   let public ParseParametersCSharp (args:array<string>) (parameters:array<CommandLineParameter>) (error:string byref) =
+   let public ParseParametersCSharp (args:array<string>) (parameters:array<CommandLineParameter>) (error:string byref) : Dictionary<string,string> =
       let (dic, errorrt)  = ParseParameters args parameters
 
-      let stripOption (key:string, value:string option)  = 
+      let inline stripOption (key:string) (value:string option) : string  = 
          match value with
-         | Some x -> (key, x)
-         | None -> (key, null)
+         | Some x -> x
+         | None -> null
 
-      let toDictionary (map : Map<_, _>) : Dictionary<_, _> = Dictionary(map)
+      let inline toDictionary (map : Map<string, string>) : Dictionary<string, string> = Dictionary(map)
       error <- errorrt
-      Map.map (fun key (value) -> stripOption) dic |> toDictionary
+      Map.map (fun key (value) -> stripOption key value) dic |> toDictionary 
+
+   let public PrintHelp (parameters:array<CommandLineParameter>) (textWriter:System.IO.TextWriter) =
+      parameters |> Array.iter (fun (para) -> sprintf "%-4s %-20s %-50s" para.shortName para.longName para.help |> textWriter.WriteLine)
